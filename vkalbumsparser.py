@@ -1,3 +1,4 @@
+from urllib import response
 import requests
 import time
 from pprint import pprint
@@ -33,14 +34,15 @@ class VK:
             'owner_id': self.id,
             'album_id': self.album,
             'extended': '1',
-            'photo_sizes': '1'
+            'photo_sizes': '1',
+            'count': 1000
             }
         response = requests.get(url, params={**self.params, **users_params}).json()
         return response['response']['items']
     
     def get_max_size_photos(self):
         data = self.get_data()
-        max_size_photos = {(items['likes']['count'], items['date']): items['sizes'][-1]['url'] for items in data}
+        max_size_photos = {(str(items['likes']['count']) + "-" + str(items['date'])): items['sizes'][-1]['url'] for items in data}
         return max_size_photos
 
 
@@ -62,7 +64,22 @@ class YaUploader:
             'url': from_url
             }
         return requests.post(url, headers=self.get_headers(), params=payload)
-        
+    
+    def create_folder(self, folder_name):
+        url = "https://cloud-api.yandex.net/v1/disk/resources"
+        headers = self.get_headers()
+        params = {
+            'path': folder_name
+        }
+        folder_name = folder_name
+        response = requests.put(url, headers=headers, params=params)
+        status_code = response.status_code
+        if status_code == 201:
+            print(f"Папка {folder_name} создана")
+        elif status_code == 409:
+            print(f"Папка {folder_name} уже существует!")
+        else:
+            response.raise_for_status()
 
 def record_json_file():
     data = vk.get_data()
@@ -76,21 +93,23 @@ def record_json_file():
 
 
 if __name__ == '__main__':
-    vk_token = ''
-    yad_token = input("Введите токен с полигона Яндекс.Диска")
-    user_id = input("Ведите id нужной страницы Вконтакте")
-    album_id = 'profile' # input("Введите название альбома ('profile', 'wall', 'saved') или введите id альбома: ")
-    vk = VK(vk_token, user_id)
+    vk_TOKEN = '...'
+    yad_TOKEN = input("Введите токен с полигона Яндекс.Диска: ")
+    user_id = input("Ведите id нужной страницы Вконтакте: ")
+    album_id = input("Введите название альбома ('profile', 'wall', 'saved') или введите id альбома: ")
+    vk = VK(vk_TOKEN, user_id)
     print(f"В альбоме {album_id} пользователя {user_id} доступно - {len(vk.get_data())} фотографий")
-    # choise = int(input("Ведите количество фотографий для загрузки: "))
+
     def main():
         storage = int(input("Выберите хранилище: 1 - Яндекс.Диск, 2 - GoogleDrive: "))
         if storage == 1:
-            uploader = YaUploader(yad_token)   
+            folder_name = input("Для создания новой папки введите её название: ")
+            uploader = YaUploader(yad_TOKEN)   
+            uploader.create_folder(folder_name)
             url_photos = vk.get_max_size_photos()
             pbar = tqdm(total=len(url_photos))
             for keys, values in url_photos.items():
-                path_to = "/Photos/" + str(keys)
+                path_to = "/" + folder_name + "/" + str(keys)
                 from_url = values
                 uploader.upload_file_from_url(from_url, path_to)
                 time.sleep(0.1)
