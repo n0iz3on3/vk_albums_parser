@@ -81,6 +81,7 @@ class YaUploader:
         else:
             response.raise_for_status()
 
+
 def record_json_file():
     data = vk.get_data()
     file_dump_list = []
@@ -92,15 +93,7 @@ def record_json_file():
         f.write(json_object)
 
 
-if __name__ == '__main__':
-    vk_TOKEN = '...'
-    yad_TOKEN = input("Введите токен с полигона Яндекс.Диска: ")
-    user_id = input("Ведите id нужной страницы Вконтакте: ")
-    album_id = input("Введите название альбома ('profile', 'wall', 'saved') или введите id альбома: ")
-    vk = VK(vk_TOKEN, user_id)
-    print(f"В альбоме {album_id} пользователя {user_id} доступно - {len(vk.get_data())} фотографий")
-
-    def main():
+def main():
         storage = int(input("Выберите хранилище: 1 - Яндекс.Диск, 2 - GoogleDrive: "))
         if storage == 1:
             folder_name = input("Для создания новой папки введите её название: ")
@@ -117,4 +110,13 @@ if __name__ == '__main__':
             pbar.close()
         record_json_file()
         print("json-файл записан")
+
+
+if __name__ == '__main__':
+    vk_TOKEN = '...'
+    yad_TOKEN = input("Введите токен с полигона Яндекс.Диска: ")
+    user_id = input("Ведите id нужной страницы Вконтакте: ")
+    album_id = input("Введите название альбома ('profile', 'wall', 'saved') или введите id альбома: ")
+    vk = VK(vk_TOKEN, user_id)
+    print(f"В альбоме {album_id} пользователя {user_id} доступно - {len(vk.get_data())} фотографий")
     main()
